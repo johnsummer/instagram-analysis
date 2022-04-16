@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# My Jupyter books
+ipynb
+
+# Secret information
+secret
