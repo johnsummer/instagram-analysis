@@ -107,14 +107,14 @@ try:
         )
 
         # コメントの傾向
-        ymax = df_media['comments_count'].max()
+        ymax_comment = df_media['comments_count'].max() + 2
 
         line_comments = (
             alt.Chart(df_media)
             .mark_line(opacity=0.8, clip=True, point=True)
             .encode(
                 x=alt.X("timestamp:T", title='日付'),
-                y=alt.Y("comments_count:Q", stack=None, title='コメント', scale=alt.Scale(domain=[0, ymax + 2]))
+                y=alt.Y("comments_count:Q", stack=None, title='コメント', scale=alt.Scale(domain=[0, ymax_comment]))
             )
         ).properties(
             width=600
@@ -126,6 +126,21 @@ try:
         )
 
         st.altair_chart(chart1, use_container_width=True)
+
+        ymax_like_day = (df_media['like_count'].mean() + df_media['like_count'].max()) / 2
+
+        histgram_like_day =(
+            alt.Chart(df_media)
+            .mark_bar(opacity=0.8, clip=True, color='orange')
+            .encode(
+                x=alt.X('day(timestamp):O', title='曜日'),
+                y=alt.Y('mean(like_count):Q', stack=None, title='いいね', scale=alt.Scale(domain=[0, ymax_like_day]))
+            )
+        ).properties(
+            width=600
+        )
+
+        st.altair_chart(histgram_like_day, use_container_width=True)
 
         st.write("""### {username}の投稿のいいね数、リーチ数の傾向""".format(username=username))
 
