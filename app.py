@@ -11,6 +11,8 @@ import streamlit as st
 from configparser import ConfigParser
 import os
 
+# 共通変数
+
 base_url = "https://graph.facebook.com/v13.0/"
 
 media_fields = 'timestamp,like_count,comments_count'
@@ -19,6 +21,9 @@ count_default = 25
 
 business_account_id = None
 access_token = None
+
+# ローカルでテストしやすくするために、ローカルに保存している認証情報。
+# Webで実行する際はこの認証用のファイルが存在しないため、ビジネスアカウントIDとアクセストークンの入力が求められる
 
 config_path = "secret/config.ini"
 if os.path.exists(config_path):
@@ -30,6 +35,7 @@ if os.path.exists(config_path):
     business_account_id = config.get(section, 'business_account_id')
     access_token = config.get(section, 'access_token')
 
+# メディア(投稿)リストを取得する
 @st.cache(allow_output_mutation=True)
 def get_media_list(username, count=count_default, business_account_id=business_account_id, access_token=access_token):
     request_url = (
@@ -44,6 +50,7 @@ def get_media_list(username, count=count_default, business_account_id=business_a
     media_list = result['business_discovery']['media']['data']
     return media_list
     
+# メディア(投稿)リストを基にメディアごとのインサイト情報を取得する
 @st.cache
 def get_insight_of_media(media_list, metric=insight_metric):
     media_list_insight = []
@@ -57,6 +64,7 @@ def get_insight_of_media(media_list, metric=insight_metric):
 
     return media_list_insight
 
+# 日本時間になるようにタイムスタンプの文字列を整形する
 def sharp_dataframe_data(df_media):
 
     # 日本時間に変換する
@@ -64,6 +72,7 @@ def sharp_dataframe_data(df_media):
 
     return df_media
 
+# メイン処理
 try:
     st.title("インスタグラム分析ツール")
 
@@ -85,6 +94,7 @@ try:
 
         st.write("""### {username}の投稿のいいね数、コメント数の傾向""".format(username=username))
 
+        # いいねの傾向
         histgram_like =(
             alt.Chart(df_media)
             .mark_bar(opacity=0.8, clip=True, color='orange')
@@ -96,6 +106,7 @@ try:
             width=600
         )
 
+        # コメントの傾向
         ymax = df_media['comments_count'].max()
 
         line_comments = (
@@ -109,6 +120,7 @@ try:
             width=600
         )
 
+        # いいね、コメントを重ねたグラフ
         chart1 = alt.layer(histgram_like, line_comments).resolve_scale(
             y = 'independent'
         )
@@ -117,6 +129,7 @@ try:
 
         st.write("""### {username}の投稿のいいね数、リーチ数の傾向""".format(username=username))
 
+        # メディアごとのリーチの傾向
         line_reach =(
             alt.Chart(df_media)
             .mark_line(opacity=0.8, clip=True, point=True)
@@ -128,6 +141,7 @@ try:
             width=600
         )
 
+        # いいね、リーチを重ねたグラフ
         chart2 = alt.layer(histgram_like, line_reach).resolve_scale(
             y = 'independent'
         )
